@@ -36,6 +36,8 @@ class Player(CircleShape):
             self.move((dt * -1))
         if keys[pygame.K_SPACE]:
             self.shoot()
+        if keys[pygame.K_LSHIFT]:
+            self.move((dt * BOOST_AMP))
 
     def move(self, dt):
         unit_vector = pygame.Vector2(0, 1)

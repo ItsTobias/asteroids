@@ -7,7 +7,12 @@ class Asteroid(CircleShape):
     def __init__(self, x, y, radius):
         super().__init__(x, y, radius)
     def draw(self, screen):
-        pygame.draw.circle(screen, COLOR_ASTROIDS, (self.position.x, self.position.y), self.radius, LINE_WIDTH)
+        if self.radius == ASTEROID_RARE_RADIUS:
+            color = COLOR_ASTEROID_RARE
+        else:
+            color = COLOR_ASTROIDS
+        pygame.draw.circle(screen, color, (self.position.x, self.position.y), self.radius, LINE_WIDTH)
+
     def update(self, dt):
         self.position += self.velocity * dt   
     def split(self):
