@@ -5,13 +5,11 @@ import pygame
 from asteroid import Asteroid
 from constants import *
 
-Edge = tuple[pygame.Vector2, Callable[[float], pygame.Vector2]]
-
 
 class AsteroidField(pygame.sprite.Sprite):
-    containers: pygame.sprite.Group
+    containers = None
 
-    edges: list[Edge] = [
+    edges = [
         (
             pygame.Vector2(1, 0),
             lambda y: pygame.Vector2(-ASTEROID_MAX_RADIUS, y * SCREEN_HEIGHT),
@@ -34,20 +32,19 @@ class AsteroidField(pygame.sprite.Sprite):
         ),
     ]
 
-    def __init__(self) -> None:
+    def __init__(self):
         pygame.sprite.Sprite.__init__(self, self.containers)
         self.spawn_timer = 0.0
         self.rare_spawn_timer = 0.0
 
-    def spawn(
-        self, radius: float, position: pygame.Vector2, velocity: pygame.Vector2
-    ) -> None:
+    def spawn(self, radius, position, velocity):
         asteroid = Asteroid(position.x, position.y, radius)
         asteroid.velocity = velocity
 
-    def update(self, dt: float) -> None:
+    def update(self, dt):
         self.spawn_timer += dt
         self.rare_spawn_timer += dt
+
         if self.rare_spawn_timer > ASTEROID_RARE_SPAWN_RATE:
             self.rare_spawn_timer = 0
             edge = random.choice(self.edges)
@@ -56,11 +53,9 @@ class AsteroidField(pygame.sprite.Sprite):
             velocity = velocity.rotate(random.randint(-30, 30))
             position = edge[1](random.uniform(0, 1))
             self.spawn(ASTEROID_RARE_RADIUS, position, velocity)
-        
+
         if self.spawn_timer > ASTEROID_SPAWN_RATE_SECONDS:
             self.spawn_timer = 0
-
-            # spawn a new asteroid at a random edge
             edge = random.choice(self.edges)
             speed = random.randint(40, 100)
             velocity = edge[0] * speed

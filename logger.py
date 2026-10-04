@@ -22,7 +22,7 @@ __all__ = ["log_state", "log_event"]
 
 _FPS = 60
 _MAX_SECONDS = 16
-_SPRITE_SAMPLE_LIMIT = 10  # Maximum number of sprites to log per group
+_SPRITE_SAMPLE_LIMIT = 10
 
 _frame_count = 0
 _state_log_initialized = False
@@ -33,11 +33,9 @@ _start_time = datetime.now()
 def log_state() -> None:
     global _frame_count, _state_log_initialized
 
-    # Stop logging after `_MAX_SECONDS` seconds
     if _frame_count > _FPS * _MAX_SECONDS:
         return
 
-    # Take a snapshot approx. once per second
     _frame_count += 1
     if _frame_count % _FPS != 0:
         return
@@ -54,16 +52,15 @@ def log_state() -> None:
 
     local_vars = frame_back.f_locals.copy()
 
-    screen_size: list[int] = []
-    game_state: dict[str, object] = {}
-    sprite_info: SpriteInfo
+    screen_size = []
+    game_state = {}
 
     for key, value in local_vars.items():
         if "pygame" in str(type(value)) and hasattr(value, "get_size"):
             screen_size = list(value.get_size())
 
         if hasattr(value, "__class__") and "Group" in value.__class__.__name__:
-            sprites_data: list[SpriteInfo] = []
+            sprites_data = []
 
             for i, sprite in enumerate(value):
                 if i >= _SPRITE_SAMPLE_LIMIT:
@@ -91,7 +88,7 @@ def log_state() -> None:
 
                 sprites_data.append(sprite_info)
 
-            group_info: GroupInfo = {"count": len(value), "sprites": sprites_data}
+            group_info = {"count": len(value), "sprites": sprites_data}
 
             game_state[key] = group_info
 
@@ -117,7 +114,7 @@ def log_state() -> None:
 
             game_state[key] = sprite_info
 
-    entry: dict[str, object] = {
+    entry = {
         "timestamp": now.strftime("%H:%M:%S.%f")[:-3],
         "elapsed_s": math.floor((now - _start_time).total_seconds()),
         "frame": _frame_count,
@@ -125,7 +122,6 @@ def log_state() -> None:
         **game_state,
     }
 
-    # New log file on each run
     mode = "w" if not _state_log_initialized else "a"
     with open("game_state.jsonl", mode) as f:
         f.write(json.dumps(entry) + "\n")
@@ -138,7 +134,7 @@ def log_event(event_type: str, **details: object) -> None:
 
     now = datetime.now()
 
-    event: dict[str, object] = {
+    event = {
         "timestamp": now.strftime("%H:%M:%S.%f")[:-3],
         "elapsed_s": math.floor((now - _start_time).total_seconds()),
         "frame": _frame_count,
