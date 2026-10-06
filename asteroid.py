@@ -1,6 +1,6 @@
 from constants import *
 from circleshape import *
-from logger import log_event
+# from logger import log_event
 import random
 
 class Asteroid(CircleShape):
@@ -19,7 +19,7 @@ class Asteroid(CircleShape):
         self.kill()
         if self.radius <= ASTEROID_MIN_RADIUS:
             return
-        log_event("asteroid_split")
+        # log_event("asteroid_split")
         random_angle = random.uniform(20, 50)
         first_velocity = self.velocity.rotate(random_angle)
         second_velocity = self.velocity.rotate(-1*random_angle)

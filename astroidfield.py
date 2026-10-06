@@ -32,17 +32,18 @@ class AsteroidField(pygame.sprite.Sprite):
         ),
     ]
 
-    def __init__(self):
+    def __init__(self, fase):
         pygame.sprite.Sprite.__init__(self, self.containers)
         self.spawn_timer = 0.0
         self.rare_spawn_timer = 0.0
+        self.fase = fase
 
     def spawn(self, radius, position, velocity):
         asteroid = Asteroid(position.x, position.y, radius)
         asteroid.velocity = velocity
 
     def update(self, dt):
-        self.spawn_timer += dt
+        self.spawn_timer += dt * (FASE_SPAWNRATE_SPEED_AMP ** (self.fase - 1))
         self.rare_spawn_timer += dt
 
         if self.rare_spawn_timer > ASTEROID_RARE_SPAWN_RATE:

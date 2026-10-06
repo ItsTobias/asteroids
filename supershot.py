@@ -2,11 +2,11 @@ from circleshape import CircleShape
 from constants import *
 import pygame
 
-class Shot(CircleShape):
+class Supershot(CircleShape):
     def __init__(self, x, y):
-        super().__init__(x, y, SHOT_RADIUS)
+        super().__init__(x, y, SUPER_SHOT_RADIUS)
     def draw(self, screen):
-        pygame.draw.circle(screen, COLOR_SHOTS, (self.position.x, self.position.y), self.radius, LINE_WIDTH)
+        pygame.draw.circle(screen, COLOR_SUPER_SHOT, (self.position.x, self.position.y), self.radius, LINE_WIDTH)
     def update(self, dt):
         self.position += self.velocity * dt
 

@@ -1,22 +1,27 @@
 import sys
 import pygame
 from constants import *
-from logger import *
+# from logger import *
 from player import Player
 from asteroid import Asteroid
 from astroidfield import AsteroidField
 from shot import Shot
+from supershot import Supershot
+from itertools import chain
 
-def reset_game(updatable, drawable, asteroids, shots):
+def reset_game(updatable, drawable, asteroids, shots, supershots):
     updatable.empty()
     drawable.empty()
     asteroids.empty()
     shots.empty()
+    supershots.empty()
 
-    player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
-    asteroid_field = AsteroidField()
+    fase = 1
 
-    return player, asteroid_field
+    player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, asteroids)
+    asteroid_field = AsteroidField(fase)
+
+    return player, asteroid_field, fase
 
 def load_highscore():
     with open("highscore.txt", "r") as file:
@@ -33,20 +38,23 @@ def main():
     
     dt = 0.0
     score = 0
+    fase = 1
 
     updatable = pygame.sprite.Group()
     drawable = pygame.sprite.Group()
     asteroids = pygame.sprite.Group()
     shots = pygame.sprite.Group()
+    supershots = pygame.sprite.Group()
 
     Player.containers = (updatable, drawable)
     Asteroid.containers = (asteroids, updatable, drawable)
     AsteroidField.containers = (updatable,)
     Shot.containers = (shots, updatable, drawable)
+    Supershot.containers = (supershots, updatable, drawable)
     
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
-    asteroid_field = AsteroidField()
+    player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, asteroids)
+    asteroid_field = AsteroidField(fase)
     background = pygame.image.load(ACHTERGROND)
     background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
     death_screen = pygame.image.load(DEATH_SCREEN)
@@ -68,7 +76,7 @@ def main():
     while True:
         dt = clock.tick(FPS) / 1000
 
-        log_state()
+        # log_state()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -81,20 +89,21 @@ def main():
                         score = 0
                         game_over = False
 
-                        player, asteroid_field = reset_game(
+                        player, asteroid_field, fase = reset_game(
                             updatable,
                             drawable,
                             asteroids,
-                            shots
+                            shots,
+                            supershots
                         )
                                             
 
         if game_over == False:
             updatable.update(dt)
-
+            
             for asteroid in asteroids:
                 if player.collision_with(asteroid):
-                    log_event("player_hit")
+                    # log_event("player_hit")
 
                     print("Game over!")
                     print(str(int(score)))
@@ -106,16 +115,26 @@ def main():
                     game_over = True
             
             for asteroid in asteroids:
-                for shot in shots:
+                for shot in chain(shots, supershots):
                     if shot.collision_with(asteroid):
-                        log_event("asteroid_shot")
-                        shot.kill()
+                        # log_event("asteroid_shot")
+                        if shot in shots:
+                            shot.kill()
                         if asteroid.radius == ASTEROID_RARE_RADIUS:
                             score += ASTEROID_RARE_POINTS
                         else:
-                            score += int(ASTEROID_MIN_RADIUS / asteroid.radius * 10)
+                            if asteroid.radius == ASTEROID_MIN_RADIUS:
+                                score += POINTS_SMALL_ASTEROID
+                            elif asteroid.radius == ASTEROID_MIN_RADIUS * 2:
+                                score += POINTS_MEDIUM_ASTEROID
+                            elif asteroid.radius == ASTEROID_MIN_RADIUS * 3:
+                                score += POINTS_LARGE_ASTEROID
                         asteroid.split()
                         break
+                    while score >= fase * SCORE_FOR_FASE_UP:
+                        fase += 1
+                        asteroid_field.fase = fase
+
             
             if game_over:
                 screen.blit(death_screen, (0, 0))
@@ -136,6 +155,14 @@ def main():
                 highscore_text = font.render(f"Highscore: {int(highscore)}", True, COLOR_SCORE)
                 screen.blit(highscore_text, (10, 45))
 
+                fase_text = font.render(f"Fase: {fase}", True, COLOR_FASE)
+                screen.blit(fase_text, (10, 80))
+
+                fps_text = font.render(f"FPS: {clock.get_fps():.0f}", True, COLOR_FPS)
+                screen.blit(fps_text, (SCREEN_WIDTH - 150, 10))
+
+
+
                 for object in drawable:
                     object.draw(screen)
 
@@ -144,78 +171,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    # game_over = False
-
-    # while True:
-    #     dt = clock.tick(FPS) / 1000
-        
-    #     log_state()
-
-    #     for event in pygame.event.get():
-    #         if event.type == pygame.QUIT:
-    #             return
-
-    #     if game_over == False:
-            
-    #         updatable.update(dt)
-            
-    #         screen.blit(background, (0, 0))
-    #         screen.blit(dark_overlay, (0, 0))
-
-    #         score_text = font.render(f"Score: {int(score)}", True, COLOR_SCORE)
-    #         screen.blit(score_text, (10, 10))
-
-    #         highscore_text = font.render(f"Highscore: {int(highscore)}", True, COLOR_SCORE)
-    #         screen.blit(highscore_text, (10, 45))
-            
-    #         for object in drawable:
-    #             object.draw(screen)
-
-    #         for asteroid in asteroids:
-    #             if player.collision_with(asteroid):
-    #                 while True:
-    #                     log_event("player_hit")
-    #                     print("Game over!")
-    #                     mouse_x, mouse_y = pygame.mouse.get_pos()
-    #                     print(mouse_x, mouse_y)
-    #                     print(str(int(score)))
-    #                     if score > highscore:
-    #                         save_highscore(score)
-
-    #                     died_text = font_large.render(f"You died with a score of: {score}", True, COLOR_DIED_TEXT)
-    #                     died_text_rect = died_text.get_rect(center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
-    #                     screen.blit(death_screen, (0, 0))
-    #                     screen.blit(died_text, died_text_rect)
-    #                     pygame.display.flip()
-
-                        
-                        
-
-    #             for shot in shots:    
-    #                 if shot.collision_with(asteroid):
-    #                     log_event("asteroid_shot")
-    #                     shot.kill()
-    #                     if asteroid.radius == ASTEROID_RARE_RADIUS:
-    #                         score += ASTEROID_RARE_POINTS
-    #                     else:
-    #                         score += int(ASTEROID_MIN_RADIUS / asteroid.radius * 10)
-    #                     asteroid.split()
-
-
-    #     pygame.display.flip()
-
-# if __name__ == "__main__":
-#     main()
